@@ -6,6 +6,8 @@ function App() {
   const [FirstCountryInfo, setFirstCountryInfo] = useState(null);
   const [SecondCountry, setSecondCountry] = useState("");
   const [SecondCountryInfo, setSecondCountryInfo] = useState(null);
+  const [AnotherCountry, setAnotherCountry] = useState("");
+  const [AnotherCountryInfo, setAnotherCountryInfo] = useState(null);
   const [error, setError] = useState(null);
   const [choosed, setChoosed] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -46,6 +48,29 @@ function App() {
     }
   }
 
+  async function fetchAnotherDataInfo() {
+    const response = await fetch("https://restcountries.com/v3.1/all");
+    const data = await response.json();
+    const randomIndex = Math.floor(Math.random() * data.length);
+    const randomCountry = data[randomIndex];
+    const name = randomCountry.name.common;
+    setAnotherCountry(name);
+    try {
+      const response = await fetch(
+        `https://restcountries.com/v3.1/name/${name}`
+      );
+      const data = await response.json();
+      if (data && data.length > 0) {
+        setAnotherCountryInfo(data[0]);
+      } else {
+        setError(`No data found for ${name}.`);
+      }
+    } catch (error) {
+      setError(`Failed to fetch data for ${name}.`);
+      console.error(error);
+    }
+  }
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -62,6 +87,14 @@ function App() {
   if (error) {
     return <div className="errorr">Error: {error}</div>;
   }
+
+  const handleNextOne = () => {
+    setFirstCountry(SecondCountry);
+    setSecondCountryInfo(SecondCountryInfo);
+    setSecondCountry(AnotherCountry);
+    setAnotherCountryInfo(AnotherCountryInfo);
+    setChoosed(false);
+  };
 
   const handleTryAgain = () => {
     setGameOver(false);
@@ -80,6 +113,8 @@ function App() {
 
   const handleCompare = (value) => {
     setChoosed(true);
+    fetchAnotherDataInfo();
+    console.log(AnotherCountry);
     setTimeout(() => {
       console.log("Delayed for 1 second.");
       console.log(value, FirstCountryInfo.area, SecondCountryInfo.area);
@@ -89,6 +124,7 @@ function App() {
         (FirstCountryInfo.area >= SecondCountryInfo.area && value === "less")
       ) {
         console.log("git");
+        handleNextOne();
       } else {
         console.log("dupa");
         handleGameOver();
@@ -172,7 +208,7 @@ function App() {
             <p>is</p>
             {choosed ? (
               <h3>
-                <span>{SecondCountryInfo.area || "Area"} km²</span>
+                <span>{NameFun(SecondCountryInfo.area) || "Area"} km²</span>
               </h3>
             ) : (
               <div className="buttonContainer">
